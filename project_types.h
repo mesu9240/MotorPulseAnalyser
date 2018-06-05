@@ -1,0 +1,12 @@
+#ifndef _PROJECT_TYPES_H
+#define _PROJECT_TYPES_H
+
+typedef enum 
+{
+INVALID,
+VALID_READ,
+VALID_WRITE,
+START_WRITE
+} RET_TYPE;
+
+#endif
