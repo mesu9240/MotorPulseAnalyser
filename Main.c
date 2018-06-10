@@ -73,6 +73,7 @@ extern INTx_Init(void);
 extern Timer1_Init(void);
 extern Timer2_Init(void);
 extern init_svpwm_unit(void);
+extern InputCapture_Init(void);
 extern set_duty_cycle_u(unsigned int);
 extern uart_calibrate_read(int*);
 extern uart_calibrate_pre_write(int*);
@@ -87,6 +88,7 @@ extern int* g_u16_calib_addr;
 //Declare functions in this file that have global scope.
 int main (void);
 volatile int test_val = 0; // RAM address for testing calibration
+volatile unsigned int gv_cnt_T3_ovf = 0;
 
 int main (void)
 {
@@ -129,19 +131,26 @@ int i;
         Timer2_Init();          //Initialize Timer2 and Timer3 as a 32-bit
                                 //Timer to be used for updating data sent to
                                 //the LCD(SPI) and COM(UART) interfaces.
-
+		Timer3_Init();
         // svpwm unit
         init_svpwm_unit();
      
+		// init capture
+		InputCapture_Init();
+	 
         // write test value
 	    test_val = 0x6261;
+		
+		// start pwm
+		set_duty_cycle_u(4000);
+		
         while (1)
         {
-                while (IFS0bits.T3IF == 1)      //Wait until 32-bit Timer
+                while (IFS0bits.T2IF == 1)      //Wait until 32-bit Timer
                 {                               //interrupt flag bit is set.
-                        IFS0bits.T3IF = 0;      //Clear 32-bit timer interrupt
+                        IFS0bits.T2IF = 0;      //Clear 32-bit timer interrupt
                                                 //flag bit
-                        T2CONbits.TON = 0;      //Stop 32-bit Timer
+                        T2CONbits.TON = 0;      //Stop Timer 2
 
                         UpdateDisplayBuffer();  //Write the most recent
                                                 //temperature and potentiometer
@@ -172,9 +181,17 @@ int i;
                         //Function WriteSPI_to_LCD() in file, SPI_for_LCD.c
                         WriteSPI_to_LCD();      //Update the LCD via SPI
 
-                        T2CONbits.TON = 1;      //Start 32-bit Timer again
+                        T2CONbits.TON = 1;      //Start Timer 2 again
                 }
-              
+				// test T3
+                while(IFS0bits.T3IF == 1)
+				{
+					if(gv_cnt_T3_ovf != 0xFFFF)
+						++gv_cnt_T3_ovf;
+					else
+						gv_cnt_T3_ovf = 0;
+					IFS0bits.T3IF = 0;
+				}
         }
 
 }

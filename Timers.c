@@ -40,6 +40,7 @@
 //Functions and Variables with Global Scope:
 void Timer1_Init(void);
 void Timer2_Init(void);
+void Timer3_Init(void);
 void __attribute__((__interrupt__)) _T1Interrupt(void);
 
 //Timer1_Init() sets up Timer1 to count up to the maximum 16-bit value, 0xFFFF,
@@ -58,13 +59,23 @@ void Timer1_Init(void)
 //0x003FFFFF with a prescaler of 1:1. 32-bit Timer ISR is disabled.
 void Timer2_Init(void)
 {
-        T2CON = 0x0000;         //32-bit Timer3:Timer2 pair set up
-        T2CONbits.T32 = 1;      //to increment every instruction cycle
-        PR3 = 0x003F;
+        T2CON = 0x0000;         
+        T2CONbits.T32 = 0;      // T2 and T3 are independent 16 bit timers
+		T2CONbits.TCKPS = 2;    // T2 presclar set to 1:64
+        //PR3 = 0x003F;
         PR2 = 0xFFFF;           //Period Register, PR3:PR2, set to 0x003FFFFF
-        IFS0bits.T3IF = 0;      //Clear the Timer3 Interrupt Flag
-        IEC0bits.T3IE = 0;      //Disable Timer3 Interrup Service Routine
-        T2CONbits.TON=1;        //Start 32-bit timer, setting Timer 2 ON bit
+        IFS0bits.T2IF = 0;      //Clear the Timer3 Interrupt Flag
+        IEC0bits.T2IE = 0;      //Disable Timer3 Interrup Service Routine
+        T2CONbits.TON = 1;      //Start 32-bit timer, setting Timer 2 ON bit
+}
+
+void Timer3_Init(void)
+{
+	T3CON = 0x0;
+	PR3 = 0xFFFF;
+	IFS0bits.T3IF = 0;
+	IEC0bits.T3IE = 0;
+	T3CONbits.TON = 1; // start 16 bits T3 timer
 }
 
 //_T1Interrupt() is the Timer1 Interrupt Service Routine
