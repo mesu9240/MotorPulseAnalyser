@@ -4,8 +4,9 @@
 //Functions and Variables with Global Scope:
 void init_svpwm_unit(void);
 void set_duty_cycle_u(unsigned int);
+
 //Macros
-#define SW_PERIOD 5000
+#define SW_PERIOD 6000
 
 void init_svpwm_unit()
 {
@@ -36,4 +37,9 @@ void set_duty_cycle_u(unsigned int duty_cycle)
       PDC1 = duty_cycle;
    else
       PDC1 = SW_PERIOD;
+}
+
+void set_pwm_period(unsigned int half_period_ticks)
+{
+	PTPERbits.PTPER = half_period_ticks;
 }

@@ -79,8 +79,8 @@ extern uart_calibrate_read(int*);
 extern uart_calibrate_pre_write(int*);
 extern uart_calibrate_write(int*);
 extern RET_TYPE calib_chk_ack(void);
+extern void set_pwm_period(unsigned int);
 
-//extern char g_u08_S5_sig;
 extern char g_u08_uart_received;
 extern unsigned int g_u16_uart_received_data[4];
 extern int* g_u16_calib_addr;
@@ -88,7 +88,7 @@ extern int* g_u16_calib_addr;
 //Declare functions in this file that have global scope.
 int main (void);
 volatile int test_val = 0; // RAM address for testing calibration
-volatile unsigned int gv_cnt_T3_ovf = 0;
+volatile unsigned int g_u16_pwm_half_period = 6000; //half period tick value, max 2^15
 
 int main (void)
 {
@@ -142,7 +142,7 @@ int i;
 	    test_val = 0x6261;
 		
 		// start pwm
-		set_duty_cycle_u(4000);
+		set_duty_cycle_u(1000);
 		
         while (1)
         {
@@ -180,18 +180,9 @@ int i;
 						}
                         //Function WriteSPI_to_LCD() in file, SPI_for_LCD.c
                         WriteSPI_to_LCD();      //Update the LCD via SPI
-
+						set_pwm_period(g_u16_pwm_half_period);
                         T2CONbits.TON = 1;      //Start Timer 2 again
                 }
-				// test T3
-                while(IFS0bits.T3IF == 1)
-				{
-					if(gv_cnt_T3_ovf != 0xFFFF)
-						++gv_cnt_T3_ovf;
-					else
-						gv_cnt_T3_ovf = 0;
-					IFS0bits.T3IF = 0;
-				}
         }
 
 }
